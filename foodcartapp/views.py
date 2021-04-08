@@ -62,20 +62,19 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    if request.method == 'POST':
-        payload = request.data
-        order = Order(
-            first_name = payload['firstname'],
-            last_name = payload['lastname'],
-            phone_number = payload['phonenumber'],
-            address = payload['address'],
+    payload = request.data
+    order = Order(
+        first_name = payload['firstname'],
+        last_name = payload['lastname'],
+        phone_number = payload['phonenumber'],
+        address = payload['address'],
+    )
+    order.save()
+    for product in payload['products']:
+        order_product = OrderProduct(
+            order = order,
+            product = Product.objects.get(pk=product['product']),
+            amount = product['quantity'],
         )
-        order.save()
-        for product in payload['products']:
-            order_product = OrderProduct(
-                order = order,
-                product = Product.objects.get(pk=product['product']),
-                amount = product['quantity'],
-            )
-            order_product.save()
-        return Response({"message": "ok"})
+        order_product.save()
+    return Response({"message": "ok"})
