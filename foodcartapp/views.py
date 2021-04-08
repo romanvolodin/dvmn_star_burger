@@ -2,7 +2,8 @@ import json
 
 from django.http import JsonResponse
 from django.templatetags.static import static
-
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from .models import Product, Order, OrderProduct
 
@@ -59,21 +60,22 @@ def product_list_api(request):
     })
 
 
+@api_view(['POST'])
 def register_order(request):
-    payload = json.loads(request.body.decode())
-    order = Order(
-        first_name = payload['firstname'],
-        last_name = payload['lastname'],
-        phone_number = payload['phonenumber'],
-        address = payload['address'],
-    )
-    order.save()
-    for product in payload['products']:
-        order_product = OrderProduct(
-            order = order,
-            product = Product.objects.get(pk=product['product']),
-            amount = product['quantity'],
+    if request.method == 'POST':
+        payload = request.data
+        order = Order(
+            first_name = payload['firstname'],
+            last_name = payload['lastname'],
+            phone_number = payload['phonenumber'],
+            address = payload['address'],
         )
-        order_product.save()
-    print(payload)
-    return JsonResponse({})
+        order.save()
+        for product in payload['products']:
+            order_product = OrderProduct(
+                order = order,
+                product = Product.objects.get(pk=product['product']),
+                amount = product['quantity'],
+            )
+            order_product.save()
+        return Response({"message": "ok"})
